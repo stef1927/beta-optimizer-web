@@ -1,0 +1,59 @@
+@main("Dumb Trader - Portofolio management.") {
+
+    <div class="modal fade" id="addTransactionModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h3>Add a transaction</h3>
+                </div>
+                <div class="modal-body">
+                    <form role="form">
+                        <div class="form-group">
+                            <label for="productField">Product</label>
+                            <input type="text" class="form-control" id="productField" placeholder="Enter stock code"
+                                data-bind="value: productField"/>
+                        </div>
+                        <div class="form-group">    
+                            <label for"quantityField">Quantity</label>
+                            <input type="text" class="form-control" id="quantityField" placeholder="Enter quantity" data-bind="value: quantityField"/>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-link" data-dismiss="modal">Close</button>
+                    <button class="btn btn-primary" data-bind="click: saveTransaction">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <h2>Transactions</h2>
+            <p>Welcome to dumb trader.</p>
+            <p>Try adding a transaction: <a data-toggle="modal" href="#addTransactionModal" class="btn btn-primary">Add</a></p>
+          
+        </div>
+        <div class="col-md-8">
+            <ul class="pager">
+                <li class="previous" data-bind="css: { disabled: prevTransactionsUrl() == null }">
+                    <a href="#" data-bind="click: prevTransactions">Previous</a>
+                </li>
+                <li class="next" data-bind="css: { disabled: nextTransactionsUrl() == null }">
+                    <a href="#" data-bind="click: nextTransactions">Next</a>
+                </li>
+            </ul>
+
+            <ul class="list-unstyled transactions" data-bind="foreach: transactions">
+                <li>
+                    <div class="product" data-bind="text: $data.product"></div>
+                    <div class="quantity" data-bind="text: $data.quantity"></div>
+                </li>
+            </ul>
+
+        </div>
+    </div>
+
+
+}
