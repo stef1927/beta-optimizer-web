@@ -1,6 +1,7 @@
 require(["webjars!knockout.js", 'webjars!jquery.js', "/routes.js", "webjars!bootstrap.js"], (ko) ->
 
   rowsPerPage = 10
+  alertTimeoutSeconds = 3
 
   class DumbTraderModel
     constructor: () ->
@@ -58,6 +59,9 @@ require(["webjars!knockout.js", 'webjars!jquery.js', "/routes.js", "webjars!boot
       
       @showError = (msg) ->
         @errorMessage(msg)
+        setTimeout(()-> 
+          self.dismissError()
+        , alertTimeoutSeconds * 1000)
     
       @dismissError = () ->
         @errorMessage(null) 
@@ -67,6 +71,9 @@ require(["webjars!knockout.js", 'webjars!jquery.js', "/routes.js", "webjars!boot
       
       @showInfo = (msg) ->
         @infoMessage(msg)
+        setTimeout(()-> 
+          self.dismissInfo()
+        , alertTimeoutSeconds * 1000)
     
       @dismissInfo = () ->
         @infoMessage(null)    
@@ -77,11 +84,9 @@ require(["webjars!knockout.js", 'webjars!jquery.js', "/routes.js", "webjars!boot
       @mainPage = ko.observable("transactions")
       
       @showTransactions = () ->
-        #@log("showTransactions")
         @mainPage("transactions")
 
       @showHoldings = () ->
-        #@log("showHoldings")
         @mainPage("holdings")
 
       #

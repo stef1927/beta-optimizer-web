@@ -88,12 +88,12 @@
         </div>
     </div>
 
-    <div class="alert alert-danger alert-dismissable" data-bind="visible: errorVisible()">
+    <div style="display: none" class="alert alert-danger alert-dismissable fade in" data-bind="visible: errorVisible()">
         <button type="button" class="close" data-bind="click: dismissError" data-dismiss="alert" aria-hidden="true">&times;</button>
         <span data-bind="text: errorMessage"></span>
     </div>
 
-    <div class="alert alert-success alert-dismissable" data-bind="visible: infoVisible()">
+    <div style="display: none" class="alert alert-success alert-dismissable fade in" data-bind="visible: infoVisible()">
         <button type="button" class="close" data-bind="click: dismissInfo" data-dismiss="alert" aria-hidden="true">&times;</button>
         <span data-bind="text: infoMessage"></span>
     </div>
