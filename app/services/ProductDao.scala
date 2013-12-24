@@ -18,12 +18,20 @@ object ProductDao {
 
   private def collection = ReactiveMongoPlugin.db.collection[JSONCollection]("products")
 
-  def save(product: Product) {
-    collection.save(product).map {
-      case ok if ok.ok =>
-        EventDao.publish("product", product)
-        product
-      case error => throw new RuntimeException(error.message)
+  def save(product: Product) : Future[Product] = {
+    val op = ProductDao.exists(product.code).flatMap(exists => 
+      if (!exists) 
+        ProductDao.saveNoCheck(product) 
+      else {
+        val err = "Product already exists"
+        Logger.info(err)
+        throw new RuntimeException(err)  
+      })
+    
+    op.recover { case ex => 
+      val err = "Failed to save product: " + ex.getMessage
+      Logger.error(err)
+      throw new RuntimeException(err)
     }
   }
 
@@ -33,10 +41,51 @@ object ProductDao {
   
   
   def find(code: String): Future[Seq[Product]] = {
-    val query = BSONDocument("code" -> code)
+    val query = BSONDocument("code" -> code.toUpperCase)
     collection.find(query).cursor[Product].toList
   }
+
+  def saveNoCheck(product: Product) : Future[Product] = {
+    collection.save(product).map {
+      case ok if ok.ok =>
+        EventDao.publish("productCreated", product)
+        product
+      case error => throw new RuntimeException(error.message)
+    }
+  }
   
+  def delete(product: Product): Future[Product] = {
+    Logger.info("Delete product " + product)
+    
+    val op = TransactionDao.findAll(product.code, 0, 10).flatMap(transactions =>
+      if (transactions.isEmpty) 
+        deleteNoCheck(product) 
+      else {
+        val err = "Transactions exists"
+        Logger.info(err)
+        throw new RuntimeException(err)  
+      })
+    
+    op.recover{ 
+      case ex => 
+        val err = "Cannot delete product: " + ex.getMessage
+        Logger.error(err)
+        throw new RuntimeException(err)
+    }
+  }
+  
+  def deleteNoCheck(product: Product): Future[Product] = {
+    Logger.info("Delete product no check " + product)
+    collection.remove(BSONDocument("_id" -> product._id), firstMatchOnly=true).map {
+      case ok if ok.ok =>
+        EventDao.publish("productDeleted", product)
+        product
+      case error => 
+        Logger.error("Failed to delete: " + error.message)
+        throw new RuntimeException(error.message)
+    }
+  }
+
   def findAll(page: Int, perPage: Int): Future[Seq[Product]] = {
     collection.find(Json.obj())
       .options(QueryOpts(skipN = page * perPage))

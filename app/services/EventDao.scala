@@ -27,6 +27,7 @@ object EventDao {
       coll <- plugin.collection
       result <- coll.save(event)
     } yield {
+      Logger.info("Published event " + event + " with result " + result.ok)
       result match {
         case ok if result.ok => event
         case error => throw new RuntimeException(error.message)
@@ -45,6 +46,7 @@ object EventDao {
 class EventPlugin(app: Application) extends Plugin {
 
   lazy val collection: Future[JSONCollection] = {
+    Logger.info("Creating events collection")
     val coll = ReactiveMongoPlugin.db(app)[JSONCollection]("events")
     coll.stats().flatMap {
       case stats if !stats.capped =>
@@ -64,12 +66,11 @@ class EventPlugin(app: Application) extends Plugin {
     }
   }
 
-  /**
-   * Get the stream of events.
-   */
   lazy val stream: Enumerator[Event] = {
+    
     // ObjectIDs are linear with time, we only want events created after now.
     val since = BSONObjectID.generate
+    Logger.info("Creating enumerator since " + since)
     val enumerator = Enumerator.flatten(for {
       coll <- collection
     } yield coll.find(Json.obj("_id" -> Json.obj("$gt" -> since)))

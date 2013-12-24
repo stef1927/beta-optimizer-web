@@ -18,10 +18,8 @@ import play.modules.reactivemongo.json.BSONFormats._
 case class Event(_id: BSONObjectID, name: String, data: JsValue)
 
 object Event {
-  // For MongoDB serialization
   implicit val eventFormat = Json.format[Event]
 
-  // For EventSource serialization
   implicit val cometMessage = CometMessage[Event](e => Json.stringify(e.data))
   implicit val idExtractor = EventIdExtractor[Event](e => Some(e._id.stringify))
   implicit val nameExtractor = EventNameExtractor[Event](e => Some(e.name))

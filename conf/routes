@@ -5,9 +5,13 @@
 GET         /                      controllers.MainController.index(path = "")
 GET         /events                controllers.MainController.events
 
-GET         /transaction           controllers.TransactionController.getTransactions(page: Int ?= 0, perPage: Int ?= 10)
-POST        /transaction           controllers.TransactionController.saveTransaction
+GET         /transaction           controllers.TransactionController.getTransactions(product: String ?="", page: Int ?= 0, perPage: Int ?= 10)
+POST        /transaction    	   controllers.TransactionController.saveTransaction
+DELETE      /transaction           controllers.TransactionController.deleteTransaction
+
 GET         /product          	   controllers.ProductController.getProducts(page: Int ?= 0, perPage: Int ?= 10)
+POST        /product 		   	   controllers.ProductController.saveProduct
+DELETE      /product          	   controllers.ProductController.deleteProduct
 
 # Webjars, requirejs, routes and other assets
 GET         /lib/require.js        controllers.WebJarAssets.requirejs

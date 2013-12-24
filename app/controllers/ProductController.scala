@@ -6,8 +6,11 @@ import play.api.libs.concurrent.Execution.Implicits._
 import play.api.Logger
 import models._
 import services.ProductDao
+import play.api.libs.concurrent.Execution.Implicits._
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.bson.BSONDateTime
+import java.util.Date
+import scala.util.{Success, Failure}
 
 object ProductController extends Controller {
 
@@ -34,9 +37,38 @@ object ProductController extends Controller {
       }
     }
   }
+  
+    case class ProductForm(code: String, description: String) {
+      def toProduct: Product = {
+        val now = new Date
+        Product(BSONObjectID.generate, code.toUpperCase, description, 0, now)
+      }
+  }
 
-  def createIfNotExists(code: String, product: Product) {
-    ProductDao.exists(code).map( {e => if(!e) ProductDao.save(product)} )
+  implicit val productFormFormat = Json.format[ProductForm]
+  
+  def saveProduct = Action(parse.json) { req =>
+    Logger.info("Save product " + req.body)
+    Json.fromJson[ProductForm](req.body).fold(
+      invalid => BadRequest("Bad product data"),
+      form => Async {
+        ProductDao.save(form.toProduct).map(_ => Created) .recover { 
+          case e => BadRequest(e.getMessage) 
+        }
+      }
+    )
+  }
+  
+  def deleteProduct = Action(parse.json) { req =>
+    Logger.info("Delete product " + req.body)
+    Json.fromJson[Product](req.body).fold(
+      invalid => BadRequest("Bad product data"),
+      product => Async {
+        ProductDao.delete(product).map(_ => Ok).recover{ 
+          case e => BadRequest(e.getMessage) 
+        }
+      }
+    )
   }
 
 }

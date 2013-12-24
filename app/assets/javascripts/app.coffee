@@ -6,6 +6,11 @@ require(["webjars!knockout.js", 'webjars!jquery.js', "/routes.js", "webjars!boot
     constructor: () ->
       self = @
       
+      #
+      # Utility functions
+      #
+
+      # Convert to a number rounded to precision digits
       ko.extenders.numeric = (target, precision) ->
         result = ko.computed(
           read: target
@@ -22,8 +27,69 @@ require(["webjars!knockout.js", 'webjars!jquery.js', "/routes.js", "webjars!boot
         result target()
         result
 
+      # Check if same BSON object  
+      @isSame = (a, b) ->
+        #if (a != undefined && b != undefined)
+        #  self.log("a._id: " + JSON.stringify(a) + " - b._id: " + JSON.stringify(b))
+        a != undefined && b != undefined && JSON.stringify(a) == JSON.stringify(b)
+
+      #
+      # Modal dialogs
+      #
+
+      @deleteProductDialog = () ->
+        @showModal("Delete Product?", "Really delete the selected product?", "Delete", @deleteProduct)  
+
+      @deleteTransactionDialog = () ->
+        @showModal("Delete Transaction?", "Really delete the selected transaction?", "Delete", @deleteTransaction)  
+
+      @modalQuestion = ko.observable()
+      @showModal = (header, body, action, doAction) ->
+        @modalQuestion({
+          header: header,
+          body: body,
+          action: action,
+          doAction: doAction
+        })
+        $('#modalQuestion').modal('show');
+
+      @errorMessage = ko.observable(null)
+      @errorVisible = ko.computed(() -> self.errorMessage() != null)
+      
+      @showError = (msg) ->
+        @errorMessage(msg)
+    
+      @dismissError = () ->
+        @errorMessage(null) 
+
+      @infoMessage = ko.observable(null)
+      @infoVisible = ko.computed(() -> self.infoMessage() != null)
+      
+      @showInfo = (msg) ->
+        @infoMessage(msg)
+    
+      @dismissInfo = () ->
+        @infoMessage(null)    
+
+      #
+      # Main page switch
+      #
+      @mainPage = ko.observable("transactions")
+      
+      @showTransactions = () ->
+        #@log("showTransactions")
+        @mainPage("transactions")
+
+      @showHoldings = () ->
+        #@log("showHoldings")
+        @mainPage("holdings")
+
+      #
+      # Transactions
+      #
+
       @transactions = ko.observableArray()
-      @productField = ko.observable()
+      @platformField = ko.observable()
       @quantityField = ko.observable().extend(numeric: 0)
       @priceField = ko.observable().extend(numeric: 4)
       
@@ -33,14 +99,25 @@ require(["webjars!knockout.js", 'webjars!jquery.js', "/routes.js", "webjars!boot
       @nextTransactionsUrl = ko.observable()
       @prevTransactionsUrl = ko.observable()
 
+      @selectedTransaction = ko.observable()
+
       @formatDate = (timestamp) ->
-        ret = new Date JSON.stringify Date(timestamp) 
+        ret = new Date(timestamp) 
         ret.getDate() + '/' + (ret.getMonth() + 1) + '/' + ret.getFullYear()   
 
       @saveTransaction = () ->
+        productExists = ko.utils.arrayFirst(@products(), (p) -> 
+          p.code == self.productField()
+        )
+        
+        unless productExists
+          @productDescriptionField("Description MISSING")
+          @saveProduct()
+
         @ajax(routes.controllers.TransactionController.saveTransaction(), {
           data: JSON.stringify({
             product: @productField()
+            platform: @platformField()
             quantity: @quantityField()
             price: @priceField()
             side: @selectedAction()
@@ -49,17 +126,38 @@ require(["webjars!knockout.js", 'webjars!jquery.js', "/routes.js", "webjars!boot
           })
           contentType: "application/json"
         }).done(() ->
-          $("#addTransactionModal").modal("hide")
-          self.productField(null)
-          self.quantityField(null)
+          $("#saveTransactionModal").modal("hide")
+          self.showInfo("Transaction created")
         ).fail((req, status, err) ->
-          alert("Request failed: " + err)
+          self.showError(req.responseText)
         )
 
-      @getTransactions = () ->
-        @ajax(routes.controllers.TransactionController.getTransactions(0, rowsPerPage))
+       @deleteTransaction = () ->
+        self.ajax(routes.controllers.TransactionController.deleteTransaction(), {
+          data: JSON.stringify(self.selectedTransaction())
+          contentType: "application/json"
+        }).done(() ->
+          self.showInfo("Transaction deleted")
+        ).fail((req, status, err) ->
+          self.showError(req.responseText)
+        )  
+
+      @selectTransaction = (transaction) ->
+        self.selectedTransaction(transaction)
+
+      @isSelectedTransaction = (transaction)->
+        self.isSame(transaction, self.selectedTransaction())  
+
+      @getTransactions = () -> 
+        getTransactions("")
+        
+      @getTransactions = (code) ->
+        @ajax(routes.controllers.TransactionController.getTransactions(code, 0, rowsPerPage))
           .done((data, status, xhr) ->
             self.loadTransactions(data, status, xhr)
+          )
+          .fail((req, status, err) ->
+            self.showError(req.responseText)
           )
 
       @nextTransactions = () ->
@@ -74,27 +172,76 @@ require(["webjars!knockout.js", 'webjars!jquery.js', "/routes.js", "webjars!boot
             self.loadTransactions(data, status, xhr)
           )
 
-      @products = ko.observableArray()    
+      #
+      # Products
+      #
+
+      @products = ko.observableArray()   
+      @productField = ko.observable()
+      @productDescriptionField = ko.observable() 
+      @selectedProduct = ko.observable()
       @nextProductsUrl = ko.observable()
       @prevProductsUrl = ko.observable()
+
+      @saveProduct = () ->
+        @ajax(routes.controllers.ProductController.saveProduct(), {
+          data: JSON.stringify({
+            code: @productField()
+            description: @productDescriptionField()
+          })
+          contentType: "application/json"
+        }).done(() ->
+          $("#saveProductModal").modal("hide")
+          self.showInfo("Product created")
+        ).fail((req, status, err) ->
+          self.showError(req.responseText)
+        )
+
+       @deleteProduct = () ->
+        self.ajax(routes.controllers.ProductController.deleteProduct(), {
+          data: JSON.stringify(self.selectedProduct())
+          contentType: "application/json"
+        }).done(() ->
+          self.showInfo("Product deleted")
+        ).fail((req, status, err) ->
+          self.showError(req.responseText)
+        )  
+
+      @selectProduct = (product) ->
+        self.selectedProduct(product)
+        self.getTransactions(product.code)
+
+      @resetProduct = () ->
+        self.selectedProduct(undefined)
+        self.getTransactions()
+
+      @isSelectedProduct = (product)->
+        self.isSame(product, self.selectedProduct())
 
       @getProducts = () ->
         @ajax(routes.controllers.ProductController.getProducts(0, rowsPerPage))
           .done((data, status, xhr) ->
             self.loadProducts(data, status, xhr)
+          ).fail((req, status, err) ->
+            self.showError(req.responseText)
           )
 
       @nextProducts = () ->
         if @nextProductsUrl()
           $.ajax({url: @nextProductsUrl()}).done((data, status, xhr) ->
-            self.loadProducts(data, status, xhr)
+            @loadProducts(data, status, xhr)
           )
 
       @prevProducts = () ->
         if @prevProductsUrl()
           $.ajax({url: @prevProductsUrl()}).done((data, status, xhr) ->
-            self.loadProducts(data, status, xhr)
+            @loadProducts(data, status, xhr)
           )    
+
+    log: (msg) ->
+      setTimeout(() -> 
+        throw new Error(msg)
+      , 0)
 
     # Convenience ajax request function
     ajax: (route, params) ->
@@ -146,7 +293,7 @@ require(["webjars!knockout.js", 'webjars!jquery.js', "/routes.js", "webjars!boot
 
   # Server Sent Events handling
   events = new EventSource(routes.controllers.MainController.events().url)
-  events.addEventListener("transaction", (t) ->
+  events.addEventListener("transactionCreated", (t) ->
     if model.prevTransactionsUrl() == null
       transaction = JSON.parse(t.data)
       model.transactions.unshift(transaction)
@@ -155,12 +302,22 @@ require(["webjars!knockout.js", 'webjars!jquery.js', "/routes.js", "webjars!boot
         model.transactions.pop()
   , false)
 
-  events.addEventListener("product", (p) ->
+  events.addEventListener("transactionDeleted", (t) ->
+    transaction = JSON.parse(t.data)
+    model.transactions.remove((t) -> model.isSame(t, transaction) )
+  , false)
+
+  events.addEventListener("productCreated", (p) ->
     if model.prevTransactionsUrl() == null
       product = JSON.parse(p.data)
       model.products.unshift(product)
       
       if model.products().length > rowsPerPage
         model.products.pop()
+  , false)
+
+  events.addEventListener("productDeleted", (p) ->
+    product = JSON.parse(p.data)
+    model.products.remove((p) -> model.isSame(p, product))
   , false)
 )

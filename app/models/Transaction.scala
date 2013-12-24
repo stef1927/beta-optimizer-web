@@ -7,6 +7,7 @@ import reactivemongo.bson.BSONObjectID
 import reactivemongo.bson.BSONDateTime
 import play.modules.reactivemongo.json.BSONFormats._
 import scala.math.BigDecimal
+import java.util.Date
 
 sealed trait Side {
   def descr: String
@@ -41,7 +42,7 @@ object Side {
 case object Buy extends Side { val descr = "Buy" } 
 case object Sell extends Side { val descr = "Sell" }
 
-case class Transaction(_id: BSONObjectID, timestamp: BSONDateTime, userid: Int, product: String,
+case class Transaction(_id: BSONObjectID, timestamp: Date, userid: Int, platform: String, product: String,
     exchange: Int, quantity: Int, price: BigDecimal, side: Option[Side], cost: BigDecimal)
 
 object Transaction { implicit val transactionFormat = Json.format[Transaction] }

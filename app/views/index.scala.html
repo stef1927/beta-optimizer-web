@@ -1,6 +1,6 @@
 @main("Dumb Trader - Portofolio management.") {
 
-    <div class="modal fade" id="addTransactionModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal fade" id="saveTransactionModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -10,8 +10,13 @@
                 <div class="modal-body">
                     <form role="form">
                         <div class="form-group">
+                            <label for="platformField">Platform</label>
+                            <input type="text" class="form-control" id="platformField" placeholder="Platform"
+                                data-bind="value: platformField"/>
+                        </div>
+                        <div class="form-group">
                             <label for="productField">Product</label>
-                            <input type="text" class="form-control" id="productField" placeholder="Stock code"
+                            <input type="text" class="form-control" id="productField" placeholder="Code"
                                 data-bind="value: productField"/>
                         </div>
                         <div class="form-group">
@@ -36,11 +41,66 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="modal fade" id="saveProductModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h3>Add a product</h3>
+                </div>
+                <div class="modal-body">
+                    <form role="form">
+                        <div class="form-group">
+                            <label for="productField">Code</label>
+                            <input type="text" class="form-control" id="productField" placeholder="Code"
+                                data-bind="value: productField"/>
+                        </div>
+                        <div class="form-group">
+                            <label for="productDescriptionField">Description</label>
+                            <input type="text" class="form-control" id="productDescriptionField" placeholder="Description"
+                                data-bind="value: productDescriptionField"/>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-link" data-dismiss="modal">Close</button>
+                    <button class="btn btn-primary" data-bind="click: saveProduct">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalQuestion" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true"  data-bind="with: modalQuestion">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h3 data-bind="text: header"></h3>
+                </div>
+                <div class="modal-body">
+                    <span data-bind="text: body"></span>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-link" data-dismiss="modal">Close</button>
+                    <button class="btn btn-primary" data-dismiss="modal" data-bind="text: action, click: doAction"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-danger alert-dismissable" data-bind="visible: errorVisible()">
+        <button type="button" class="close" data-bind="click: dismissError" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <span data-bind="text: errorMessage"></span>
+    </div>
+
+    <div class="alert alert-success alert-dismissable" data-bind="visible: infoVisible()">
+        <button type="button" class="close" data-bind="click: dismissInfo" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <span data-bind="text: infoMessage"></span>
+    </div>
+
+    <div class="row" data-bind="visible: mainPage() == 'transactions'">
 
         <div class="col-md-4">
-            <h2>Products</h2>
-            
             <ul class="pager">
                 <li class="previous" data-bind="css: { disabled: prevProductsUrl() == null }">
                     <a href="#" data-bind="click: prevProducts">Previous</a>
@@ -48,27 +108,34 @@
                 <li class="next" data-bind="css: { disabled: nextProductsUrl() == null }">
                     <a href="#" data-bind="click: nextProducts">Next</a>
                 </li>
-            </ul>
+            </ul>  
 
-            <table class="table table-striped">
+            <h2>Products</h2>
+
+            <table class="table table-striped table-hover table-bordered">
                 <thead>
                     <tr>
                         <th>Code</th>
                         <th>Description</th>
+                        <th>Market Value</th>
+                        <th>Valuation Date</th>
                     </tr>
                 </thead>
                 <tbody data-bind="foreach: products">
-                    <tr>
+                    <tr data-bind="click: $root.selectProduct, css: { 'row-selected' : $root.isSelectedProduct($data) }">
                         <td data-bind="text: code"></td>
                         <td data-bind="text: description"></td>
+                        <td data-bind="text: marketValue"></td>
+                        <td data-bind="text: $parent.formatDate(valuationDate)"></td>
                     </tr>
                 </tbody>
-            </table>     
+            </table>  
+
+            <a data-toggle="modal" href="#saveProductModal" class="btn btn-primary">Add</a> 
+            <button class="btn btn-primary" data-bind="click: deleteProductDialog">Delete</button>
         </div>
         
         <div class="col-md-8">
-            <h2>Transactions</h2>
-
             <ul class="pager">
                 <li class="previous" data-bind="css: { disabled: prevTransactionsUrl() == null }">
                     <a href="#" data-bind="click: prevTransactions">Previous</a>
@@ -78,10 +145,13 @@
                 </li>
             </ul>
 
-            <table class="table table-striped">
+            <h2>Transactions</h2>
+
+            <table class="table table-striped table-hover table-bordered">
                 <thead>
                     <tr>
                         <th>Date</th>
+                        <th>Platform</th>
                         <th>Product</th>
                         <th>Side</th>
                         <th>Quantity</th>
@@ -90,8 +160,9 @@
                     </tr>
                 </thead>
                 <tbody data-bind="foreach: transactions">
-                    <tr>
+                    <tr data-bind="click: $root.selectTransaction, css: { 'row-selected': $root.isSelectedTransaction($data) }">
                         <td data-bind="text: $parent.formatDate(timestamp)"></td>
+                        <td data-bind="text: platform"></td>
                         <td data-bind="text: product"></td>
                         <td data-bind="text: side"></td>
                         <td data-bind="text: quantity"></td>
@@ -101,9 +172,21 @@
                 </tbody>
             </table> 
 
-            <a data-toggle="modal" href="#addTransactionModal" class="btn btn-primary">Add</a>   
+            <a data-toggle="modal" href="#saveTransactionModal" class="btn btn-primary">Add</a> 
+            <button class="btn btn-primary" data-bind="click: deleteTransactionDialog">Delete</button>
+            <button class="btn btn-primary" data-bind="click: resetProduct">Reset</button>
         </div>
     </div>
 
+    <div class="row" data-bind="visible: mainPage() == 'holdings'">
+
+        <div class="col-md-4">
+            <h2>Platforms</h2>
+        </div>
+        
+        <div class="col-md-8">
+            <h2>Holdings</h2>
+        </div>
+    </div>
 
 }

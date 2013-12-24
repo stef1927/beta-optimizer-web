@@ -1,7 +1,27 @@
-@lightRed:   #fdd;
-@lightGreen: #dfd;
-@lightBlue:  #ddf;
- 
-@dt_headerColor:@lightRed;
-@dt_rowColor:@lightBlue;
+// http://pikock.github.io/bootstrap-magic/app/#!/editor
 
+@table-bg-accent: #f9f9f9;
+@table-bg-hover: darken(@table-bg-accent, 10%);
+@table-border-color: darken(@table-bg-accent, 40%);
+
+.table-striped {
+  > tbody > tr:nth-child(odd) {
+    > td,
+    > th {
+      background-color: @table-bg-accent;
+    }
+  }
+}
+
+.table-hover {
+  > tbody > tr:hover {
+    > td,
+    > th {
+      background-color: @table-bg-hover;
+    }
+  }
+}
+
+.row-selected {
+	border: 3px solid darken(@table-bg-hover, 20%);
+}
