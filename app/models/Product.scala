@@ -17,6 +17,9 @@ object ProductType extends Enumeration {
 import ProductType._
 */
 
-case class Product(_id: BSONObjectID, code: String, description: String, marketValue: BigDecimal, valuationDate: Date) 
+// The code is unique
+case class Product(_id: BSONObjectID, code: String, description: 
+	String, marketValue: BigDecimal, valuationDate: Date)
+
 object Product { implicit val stockFormat = Json.format[Product] }
 

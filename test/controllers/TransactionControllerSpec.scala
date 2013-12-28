@@ -24,6 +24,7 @@ object TransactionControllerSpec extends Specification {
 	  
     "save a transaction" in withMongoDb { implicit app =>
       createProduct("GOOG", "Google")
+      createPlatform("HSBC", "HKD")
       status(TransactionController.saveTransaction(FakeRequest().withBody(
         Json.obj("product" -> "GOOG", 
                  "platform" -> "HSBC",
@@ -35,15 +36,18 @@ object TransactionControllerSpec extends Specification {
       ))) must_== CREATED
       val transactions = Await.result(TransactionDao.findAll(0, 10), Duration(5, SECONDS))
       transactions must haveSize(1)
-      transactions.head.product must_== "GOOG"
-      transactions.head.exchange must_== 0
-      transactions.head.quantity must_== 100
-      transactions.head.price must_== 50.50
-      transactions.head.side must_== Some(Buy)
-      transactions.head.cost must_== 0
+
+      val transaction = transactions.head.as[Transaction]
+      transaction.product must_== "GOOG"
+      transaction.exchange must_== 0
+      transaction.quantity must_== 100
+      transaction.price must_== 50.50
+      transaction.side must_== Some(Buy)
+      transaction.cost must_== 0
     }
     
     "not save a transaction without product" in withMongoDb { implicit app =>
+      createPlatform("HSBC", "HKD")
       status(TransactionController.saveTransaction(FakeRequest().withBody(
         Json.obj("product" -> "GOOG", 
                  "platform" -> "HSBC",
@@ -56,9 +60,40 @@ object TransactionControllerSpec extends Specification {
       val transactions = Await.result(TransactionDao.findAll(0, 10), Duration(5, SECONDS))
       transactions must haveSize(0)
     }
+
+    "not save a transaction without platform" in withMongoDb { implicit app =>
+      createProduct("GOOG", "Google")
+      status(TransactionController.saveTransaction(FakeRequest().withBody(
+        Json.obj("product" -> "GOOG", 
+                 "platform" -> "HSBC",
+             "exchange" -> 0, 
+             "quantity" -> 100, 
+             "price" -> 50.50, 
+             "side" -> "Buy", 
+             "cost" -> 0)
+      ))) must_== BAD_REQUEST
+      val transactions = Await.result(TransactionDao.findAll(0, 10), Duration(5, SECONDS))
+      transactions must haveSize(0)
+    }
+
+    "not save a transaction without platform or product" in withMongoDb { implicit app =>
+      status(TransactionController.saveTransaction(FakeRequest().withBody(
+        Json.obj("product" -> "GOOG", 
+                 "platform" -> "HSBC",
+             "exchange" -> 0, 
+             "quantity" -> 100, 
+             "price" -> 50.50, 
+             "side" -> "Buy", 
+             "cost" -> 0)
+      ))) must_== BAD_REQUEST
+      val transactions = Await.result(TransactionDao.findAll(0, 10), Duration(5, SECONDS))
+      transactions must haveSize(0)
+    }
     
     "delete a transaction" in withMongoDb { implicit app =>
       createProduct("GOOG", "Google")
+      createPlatform("HSBC", "HKD")
+
       createTransaction("GOOG", "HSBC", 0, 200, 123, "Buy", 0)
       createTransaction("GOOG", "HSBC", 0, 300, 345, "Sell", 0)
       val transactionsBeforeDelete = Await.result(TransactionDao.findAll(0, 10), Duration.Inf)
@@ -70,10 +105,13 @@ object TransactionControllerSpec extends Specification {
       
       val transactionsAfterDelete = Await.result(TransactionDao.findAll(0, 10), Duration.Inf)
       transactionsAfterDelete must haveSize(1)
-      transactionsAfterDelete.head.side must_== Some(Buy)
+
+      val transaction = transactionsAfterDelete.head.as[Transaction]
+      transaction.side must_== Some(Buy)
     }
 
     "get transactions" in withMongoDb { implicit app =>
+      createPlatform("HSBC", "HKD")
       createProduct("GOOG", "Google")
       createProduct("BP", "BP descr")
       createTransaction("GOOG", "HSBC", 0, 400, 789, "Buy", 0)
@@ -85,6 +123,7 @@ object TransactionControllerSpec extends Specification {
     }
     
     "get transactions for a product" in withMongoDb { implicit app =>
+      createPlatform("HSBC", "HKD")
       createProduct("GOOG", "Google")
       createProduct("BP", "BP descr")
       createTransaction("GOOG", "HSBC", 0, 600, 543, "Buy", 0)
@@ -95,10 +134,13 @@ object TransactionControllerSpec extends Specification {
     }
     
     "page transactions" in withMongoDb { implicit app =>
+      createPlatform("HSBC", "HKD")
       createProduct("GOOG", "Google")
+
       for (i <- 1 to 30) {
          createTransaction("GOOG", "HSBC", 0, 800, 500, "Buy", 0)
       }
+      
       def test(page: Int, perPage: Int) = {
         val result = TransactionController.getTransactions("", page, perPage)(FakeRequest())
         val (prev, next) = header("Link", result).map { link =>
@@ -115,6 +157,11 @@ object TransactionControllerSpec extends Specification {
       test(0, 31) must_== (false, false, 30)
       test(0, 29) must_== (false, true, 29)
     }
+  }
+
+  def createPlatform(name: String, currency: String) = {
+    Await.result(PlatformDao.save(Platform
+     (BSONObjectID.generate, name, currency)), Duration(5, SECONDS))
   }
 
   def createProduct(code: String, description: String) = {

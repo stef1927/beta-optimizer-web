@@ -1,5 +1,8 @@
 @main("Dumb Trader - Portofolio management.") {
 
+    <!-- Modal dialogs -->
+
+    <!-- Transaction form -->
     <div class="modal fade" id="saveTransactionModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -8,28 +11,39 @@
                     <h3>Add a transaction</h3>
                 </div>
                 <div class="modal-body">
-                    <form role="form">
+                    <form class="form-horizontal" role="form">
                         <div class="form-group">
-                            <label for="platformField">Platform</label>
-                            <input type="text" class="form-control" id="platformField" placeholder="Platform"
-                                data-bind="value: platformField"/>
+                            <label class="col-sm-2 control-label" for="platformChoice">Platform</label>
+                            <div class="col-sm-8">
+                                <select class="form-control" id="platformChoice" data-bind="options: platforms, optionsText: 'name', value: selectedPlatform"></select></p>
+                            </div>
+                            <div class="col-sm-2">
+                                <a data-toggle="modal" href="#savePlatformModal" class="btn btn-primary">Add</a> 
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label for="productField">Product</label>
-                            <input type="text" class="form-control" id="productField" placeholder="Code"
-                                data-bind="value: productField"/>
+                            <label class="col-sm-2 control-label" for="productField">Product</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="productField" placeholder="Code" data-bind="value: productField"/>
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label for="actionDropDown">Side</label>
-                            <select class="form-control" id="actionDropDown" data-bind="options: actions, value: selectedAction"></select>
+                            <label class="col-sm-2 control-label" for="actionDropDown">Side</label>
+                            <div class="col-sm-10">
+                                <select class="form-control" id="actionDropDown" data-bind="options: actions, value: selectedAction"></select>
+                            </div>
                         </div>
                         <div class="form-group">    
-                            <label for"quantityField">Quantity</label>
-                            <input type="text" class="form-control" id="quantityField" data-bind="value: quantityField"/>
+                            <label class="col-sm-2 control-label" for"quantityField">Quantity</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="quantityField" data-bind="value: quantityField"/>
+                            </div>
                         </div>
                         <div class="form-group">    
-                            <label for"priceField">Price</label>
-                            <input type="text" class="form-control" id="priceField" data-bind="value: priceField"/>
+                            <label class="col-sm-2 control-label" for"priceField">Price</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="priceField" data-bind="value: priceField"/>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -41,6 +55,7 @@
         </div>
     </div>
 
+    <!-- Product form -->
     <div class="modal fade" id="saveProductModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -49,22 +64,60 @@
                     <h3>Add a product</h3>
                 </div>
                 <div class="modal-body">
-                    <form role="form">
+                    <form class="form-horizontal" role="form">
                         <div class="form-group">
-                            <label for="productField">Code</label>
-                            <input type="text" class="form-control" id="productField" placeholder="Code"
+                            <label class="col-sm-2 control-label" for="productField">Code</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="productField" placeholder="Code"
                                 data-bind="value: productField"/>
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label for="productDescriptionField">Description</label>
-                            <input type="text" class="form-control" id="productDescriptionField" placeholder="Description"
+                            <label class="col-sm-2 control-label" for="productDescriptionField">Description</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="productDescriptionField" placeholder="Description"
                                 data-bind="value: productDescriptionField"/>
+                            </div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-link" data-dismiss="modal">Close</button>
                     <button class="btn btn-primary" data-bind="click: saveProduct">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Platform form -->
+    <div class="modal fade" id="savePlatformModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h3>Add a platform</h3>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal" role="form">
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="platformField">Name</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="platformField" placeholder="Name"
+                                data-bind="value: platformField"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="currencyField">Currency</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="currencyField" placeholder="Description"
+                                data-bind="value: currencyField"/>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-link" data-dismiss="modal">Close</button>
+                    <button class="btn btn-primary" data-bind="click: savePlatform">Add</button>
                 </div>
             </div>
         </div>
@@ -88,19 +141,25 @@
         </div>
     </div>
 
-    <div style="display: none" class="alert alert-danger alert-dismissable fade in" data-bind="visible: errorVisible()">
-        <button type="button" class="close" data-bind="click: dismissError" data-dismiss="alert" aria-hidden="true">&times;</button>
-        <span data-bind="text: errorMessage"></span>
+    <!-- Alerts -->
+    <div class="alert-panel" data-bind="foreach: messages">
+            <div class="alert alert-dismissable fade in" data-bind="css: style">
+                <button type="button" class="close" data-bind="click: $parent.dismissMessage" data-dismiss="alert" aria-hidden="true">&times;</button>
+                <span data-bind="text: text"></span>
+            </div>
     </div>
 
-    <div style="display: none" class="alert alert-success alert-dismissable fade in" data-bind="visible: infoVisible()">
-        <button type="button" class="close" data-bind="click: dismissInfo" data-dismiss="alert" aria-hidden="true">&times;</button>
-        <span data-bind="text: infoMessage"></span>
-    </div>
-
+    <!-- Transactions view -->
     <div class="row" data-bind="visible: mainPage() == 'transactions'">
 
         <div class="col-md-4">
+
+            <!--ul class="pagination">
+                <li><a href="#">&laquo;</a></li>
+                <li><a href="#">1</a></li>
+                <li><a href="#">&raquo;</a></li>
+            </ul-->
+
             <ul class="pager">
                 <li class="previous" data-bind="css: { disabled: prevProductsUrl() == null }">
                     <a href="#" data-bind="click: prevProducts">Previous</a>
@@ -147,7 +206,7 @@
 
             <h2>Transactions</h2>
 
-            <table class="table table-striped table-hover table-bordered">
+            <table class="text-right table table-striped table-hover table-bordered">
                 <thead>
                     <tr>
                         <th>Date</th>
@@ -166,22 +225,42 @@
                         <td data-bind="text: product"></td>
                         <td data-bind="text: side"></td>
                         <td data-bind="text: quantity"></td>
-                        <td data-bind="text: price"></td>
-                        <td data-bind="text: cost"></td>
+                        <td data-bind="text: $parent.formatPrice(price)"></td>
+                        <td data-bind="text: quantity * price"></td>
                     </tr>
                 </tbody>
             </table> 
 
             <a data-toggle="modal" href="#saveTransactionModal" class="btn btn-primary">Add</a> 
             <button class="btn btn-primary" data-bind="click: deleteTransactionDialog">Delete</button>
-            <button class="btn btn-primary" data-bind="click: resetProduct">Reset</button>
+            <button class="btn btn-primary" data-bind="click: resetProduct">All</button>
         </div>
     </div>
 
+    <!-- Holdings view -->
     <div class="row" data-bind="visible: mainPage() == 'holdings'">
 
         <div class="col-md-4">
             <h2>Platforms</h2>
+
+               <table class="text-right table table-striped table-hover table-bordered">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Currency</th>
+                    </tr>
+                </thead>
+                <tbody data-bind="foreach: platforms">
+                    <tr "click: $root.selectPlatform, css: { 'row-selected': $root.isSelectedPlatform($data) }">
+                        <td data-bind="text: name"></td>
+                        <td data-bind="text: currency"></td>
+                    </tr>
+                </tbody>
+            </table> 
+
+            <a data-toggle="modal" href="#savePlatformModal" class="btn btn-primary">Add</a> 
+            <button class="btn btn-primary" data-bind="click: deletePlatformDialog">Delete</button>
+
         </div>
         
         <div class="col-md-8">

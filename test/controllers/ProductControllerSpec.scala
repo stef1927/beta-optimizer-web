@@ -32,8 +32,10 @@ object ProductControllerSpec extends Specification {
       
       val products = Await.result(ProductDao.findAll(0, 10), Duration(5, SECONDS))
       products must haveSize(1)
-      products.head.code must_== "GOOG"
-      products.head.description must_== "Description"
+
+      val product = products.head.as[Product]
+      product.code must_== "GOOG"
+      product.description must_== "Description"
     }
     
     "save a product using uppercase code" in withMongoDb { implicit app =>
@@ -43,8 +45,10 @@ object ProductControllerSpec extends Specification {
       
       val products = Await.result(ProductDao.findAll(0, 10), Duration(5, SECONDS))
       products must haveSize(1)
-      products.head.code must_== "GOOG"
-      products.head.description must_== "Description"
+
+      val product = products.head.as[Product]
+      product.code must_== "GOOG"
+      product.description must_== "Description"
     }
     
     "find a product with different case" in withMongoDb { implicit app =>
@@ -52,13 +56,15 @@ object ProductControllerSpec extends Specification {
       
       status(ProductController.saveProduct(pr)) must_== CREATED
       
-      val exists = Await.result(ProductDao.exists("gOOg"), Duration(5, SECONDS))
+      val exists = Await.result(ProductDao.exists("code", "gOOg"), Duration(5, SECONDS))
       exists must_== true
 
-      val products = Await.result(ProductDao.find("goog"), Duration(5, SECONDS))
+      val products = Await.result(ProductDao.find("code", "goog"), Duration(5, SECONDS))
       products must haveSize(1)
-      products.head.code must_== "GOOG"
-      products.head.description must_== "Description"
+
+      val product = products.head.as[Product]
+      product.code must_== "GOOG"
+      product.description must_== "Description"
     }
     
     "delete a product without transactions" in withMongoDb { implicit app =>
@@ -77,8 +83,11 @@ object ProductControllerSpec extends Specification {
     }
 
     "not delete a product with a transaction" in withMongoDb { implicit app =>
-       val pr = FakeRequest().withBody(Json.obj("code" -> "GOOG",  "description" -> "Description"))
-       status(ProductController.saveProduct(pr)) must_== CREATED  
+       val productForm = FakeRequest().withBody(Json.obj("code" -> "GOOG",  "description" -> "Description"))
+       status(ProductController.saveProduct(productForm)) must_== CREATED  
+
+       val platformform = FakeRequest().withBody(Json.obj("name" -> "HSBC",  "currency" -> "CYN"))
+       status(PlatformController.savePlatform(platformform)) must_== CREATED  
        
        Await.result(TransactionDao.save(Transaction
          (BSONObjectID.generate, new Date(), -1, "HSBC", "GOOG", 0, 1000, 700, Some(Buy), 0)), Duration(5, SECONDS))

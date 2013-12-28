@@ -42,7 +42,10 @@ object Side {
 case object Buy extends Side { val descr = "Buy" } 
 case object Sell extends Side { val descr = "Sell" }
 
+// The platform is hte name of the platform, see Platform object
+// The product is the code of the product, see Product object
 case class Transaction(_id: BSONObjectID, timestamp: Date, userid: Int, platform: String, product: String,
-    exchange: Int, quantity: Int, price: BigDecimal, side: Option[Side], cost: BigDecimal)
+    exchange: Int, quantity: Int, price: BigDecimal, side: Option[Side], 
+    cost: BigDecimal)
 
 object Transaction { implicit val transactionFormat = Json.format[Transaction] }

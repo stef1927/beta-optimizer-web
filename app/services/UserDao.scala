@@ -12,29 +12,12 @@ import reactivemongo.api.QueryOpts
 import reactivemongo.core.commands.Count
 import reactivemongo.bson.BSONObjectID
 
-object UserDao {
+object UserDao extends MongoCollection {
 
-  private def collection = ReactiveMongoPlugin.db.collection[JSONCollection]("users")
+  def collectionName = "users"
 
-  def save(user: User): Future[User] = {
-    collection.save(user).map {
-      case ok if ok.ok =>
-        EventDao.publish("user", user)
-        user
-      case error => throw new RuntimeException(error.message)
-    }
-  }
+  def eventCreated = "userCreated"
 
-  def findAll(page: Int, perPage: Int): Future[Seq[User]] = {
-    collection.find(Json.obj())
-      .options(QueryOpts(skipN = page * perPage))
-      .sort(Json.obj("_id" -> -1))
-      .cursor[User]
-      .toList(perPage)
-  }
-
-  def count: Future[Int] = {
-    ReactiveMongoPlugin.db.command(Count(collection.name))
-  }
+  def eventDeleted = "userDeleted"
 
 }

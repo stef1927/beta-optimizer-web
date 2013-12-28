@@ -20,7 +20,10 @@ object MainController extends Controller {
         routes.javascript.TransactionController.deleteTransaction,
         routes.javascript.ProductController.getProducts,
         routes.javascript.ProductController.saveProduct,
-        routes.javascript.ProductController.deleteProduct
+        routes.javascript.ProductController.deleteProduct,
+        routes.javascript.PlatformController.getPlatforms,
+        routes.javascript.PlatformController.savePlatform,
+        routes.javascript.PlatformController.deletePlatform
       )
     ).as("text/javascript")
   }

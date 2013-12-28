@@ -23,7 +23,13 @@ object ApplicationBuild extends Build {
 
   val main = play.Project(appName, appVersion, appDependencies).settings(
     // Add your own project settings here
-    scalaVersion := "2.10.2"
+    scalaVersion := "2.10.2",
+
+    // Disable scaladoc as it takes too long on Heroku
+    sources in doc in Compile := List(),
+    sources in doc in Test := List(),
+    publishArtifact in (Compile, packageDoc) := false,
+    publishArtifact in (Test, packageDoc) := false
   )
 
 }

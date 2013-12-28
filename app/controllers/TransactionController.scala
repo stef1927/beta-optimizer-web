@@ -16,7 +16,7 @@ object TransactionController extends Controller {
     Async {
       for {
         count <- TransactionDao.count
-        transactions <- TransactionDao.findAll(product, page, perPage)
+        transactions <- if(product.isEmpty) TransactionDao.findAll(page, perPage) else TransactionDao.find("product", product, page, perPage)
       } yield {
         val result = Ok(Json.toJson(transactions))
 
@@ -42,7 +42,8 @@ object TransactionController extends Controller {
     def toTransaction: Transaction = {
       val now = new Date
       val user = -1
-      Transaction(BSONObjectID.generate, now, user, platform, product, exchange, quantity, price, Side.parse(side), cost)
+      Transaction(BSONObjectID.generate, now, user, platform.toUpperCase, product.toUpperCase, 
+          exchange, quantity, price, Side.parse(side), cost)
     }
   }
 

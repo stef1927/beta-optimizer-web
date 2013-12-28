@@ -34,7 +34,7 @@ object MongoDBTestUtils {
 
   def dropAll(db: DefaultDB) = {
     Await.ready(Future.sequence(Seq(
-      db.collection[JSONCollection]("messages").drop(),
+      db.collection[JSONCollection]("platforms").drop(),
       db.collection[JSONCollection]("products").drop(),
       db.collection[JSONCollection]("transactions").drop(),
       db.collection[JSONCollection]("users").drop(),

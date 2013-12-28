@@ -13,6 +13,10 @@ GET         /product          	   controllers.ProductController.getProducts(page
 POST        /product 		   	   controllers.ProductController.saveProduct
 DELETE      /product          	   controllers.ProductController.deleteProduct
 
+GET         /platform          	   controllers.PlatformController.getPlatforms
+POST        /platform 		   	   controllers.PlatformController.savePlatform
+DELETE      /platform          	   controllers.PlatformController.deletePlatform
+
 # Webjars, requirejs, routes and other assets
 GET         /lib/require.js        controllers.WebJarAssets.requirejs
 GET         /webjars/*file         controllers.WebJarAssets.at(file)
